@@ -1,5 +1,7 @@
 from typing import Protocol
 
+from backend.models.domain_models.user_identity import UserInformation
+
 class CheckLoginRepository(Protocol):
 
   async def check_if_credentials_are_allowed(
@@ -19,9 +21,8 @@ class CheckLoginRepository(Protocol):
   ) -> None:
     pass
 
-  async def check_if_user_exists(
+  async def fetch_user(
     self,
     email: str,
-  ) -> bool:
-    # The output of this should be a user object
+  ) -> UserInformation:
     pass

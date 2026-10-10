@@ -1,14 +1,9 @@
-from base import Base
-from pydantic import Field, ConfigDict
+from backend.models.api_schemas.base import Base
+from pydantic import Field, ConfigDict, SecretStr
 
 class RegisterRequest(Base):
-  username: str = Field(
-    min_length=8,
-    max_length=40,
-    description="Username of user account to create"
-  )
   email: str = Field(description="Email address of new user account")
-  password: str = Field(description="Encrypted password of potentially registered user")
+  password: SecretStr = Field(description="plaintext password of potentially registered user")
   user_type: str = Field(
     description="Type of account they wish to create "
                 "(Therapist, Client, Administrator)"
@@ -18,6 +13,11 @@ class RegisterRequest(Base):
     strict=True,
     extra = "forbid"
   )
+
+class RegisterRequestResponse(Base):
+  token: str = Field(description = "Generated Token for valid user")
+  user_id: str = Field(description="User's unique ID")
+  user_type: str = Field(description="Type of account they wish to create ")
 
 class LoginRequest(Base):
   email: str = Field(

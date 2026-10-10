@@ -18,12 +18,14 @@ class User(Base):
     unique = True
   )
 
+  @validates("user_type")
+  def validate_type(self, _, user_type: str) -> str:
+    if user_type.lower() not in ["client", "therapist", "admin"]:
+      raise ValueError(f"Not a valid user_type: {user_type}")
+    return user_type
+
   @validates("email")
-  def validate_email(
-    self,
-    _,
-    email: str
-  ) -> str:
+  def validate_email(self, _, email: str) -> str:
     if not re.match(
       r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
       email
