@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import (
   create_async_engine,
   AsyncEngine,
   async_sessionmaker,
-  AsyncSession
+)
+from backend.domain.service.check_input_service import (
+  check_password,
+  check_email,
+  check_user_type,
+  check_user_id,
+  check_token
 )
 
 from backend.models.domain_models.user_identity import UserInformation
@@ -46,7 +52,6 @@ class AsyncPostgresDatabase:
 
   async def check_if_credentials_are_allowed(
     self,
-    password: str,
     email: str
   ) -> bool:
     async with self.session_maker() as session:
@@ -62,6 +67,11 @@ class AsyncPostgresDatabase:
     token: str,
     user_id: str
   ) -> None:
+    check_email(email)
+    check_user_type(user_type)
+    check_password(password)
+    check_user_id(user_id)
+    check_token(token)
     async with self.session_maker() as session:
       stmt = insert(User).values(
         email = email,

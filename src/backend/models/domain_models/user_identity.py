@@ -8,3 +8,6 @@ class UserInformation():
   user_type: str
   token: str
   user_id: str
+
+  def __iter__(self):
+    return iter([self.user_id, self.email, self.user_type, self.password, self.token])

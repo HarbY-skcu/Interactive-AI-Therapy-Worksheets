@@ -1,5 +1,5 @@
 import os
-from typing import Annotated, Generator, Dict, AsyncGenerator
+from typing import Annotated, Dict, AsyncGenerator
 import dotenvx
 import asyncio
 from contextlib import asynccontextmanager
@@ -32,7 +32,7 @@ async def item_lifespan(
     await new_db.close()
 
 account_maker_router = APIRouter(lifespan = item_lifespan)
-dotenvx.load_dotenv()
+dotenvx.load_dotenv("src/backend/config.env")
 
 async def get_database(request: Request) -> CheckLoginRepository:
   return request.state.db
@@ -57,18 +57,20 @@ def get_encrypter() -> Encrypter:
 async def create_account(
   proposed_user: Annotated[RegisterRequest, Body()],
   user_database: Annotated[CheckLoginRepository, Depends(get_database)],
-  encryption: Annotated[Encrypter, Depends(get_encrypter)],
+  jwt_encrypter: Annotated[Encrypter, Depends(get_encrypter)],
 ) -> RegisterRequestResponse:
   allowed_flag = await asyncio.create_task(
     user_database.check_if_credentials_are_allowed(
-      password = proposed_user.password.get_secret_value(),
       email = proposed_user.email,
     )
   )
   if not allowed_flag:
-    raise HTTPException(status_code=400, detail="Incorrect Credentials, try again")
+    raise HTTPException(status_code=400, detail="Account is already registered")
 
-  encrypted_data = encryption.encrypt(proposed_user.password.get_secret_value())
+  encrypted_data = jwt_encrypter.encrypt(
+    proposed_user.password.get_secret_value(),
+    proposed_user.user_type
+  )
 
   await asyncio.create_task(
     user_database.create_new_user(

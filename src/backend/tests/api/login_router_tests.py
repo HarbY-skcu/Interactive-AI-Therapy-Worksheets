@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from typing import Generator
 
-from backend.tests.fixtures.login_router_fixtures import login_router_fixture
+from backend.tests.fixtures.api.login_router_fixtures import login_router_fixture
 
 
 def test_database_failure_during_request(

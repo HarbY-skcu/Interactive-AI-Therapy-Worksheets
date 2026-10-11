@@ -3,7 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 from typing import Generator
 
-from backend.tests.fixtures.make_account_router_fixtures import register_router, invalid_passwords, invalid_emails
+from backend.tests.fixtures.api.make_account_router_fixtures import register_router, invalid_passwords, invalid_emails
 
 
 def test_account_takes_valid_credentials(

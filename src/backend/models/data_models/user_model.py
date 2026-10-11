@@ -1,12 +1,25 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, validates
 from base_model import Base
 import re
+from backend.domain.service.check_input_service import (
+  check_password,
+  check_email,
+  check_user_type,
+  check_token,
+  check_user_id
+)
 
 class User(Base):
   __tablename__ = 'user_information'
+  __table_args__ = (
+    CheckConstraint(
+      "user_type IN ('client', 'therapist', 'admin')",
+      name = "ck_user_information_user_type"
+    )
+  )
 
-  password: Mapped[str] = mapped_column(unique = True)
+  password: Mapped[str] = mapped_column()
   email: Mapped[str] = mapped_column(
     primary_key = True,
     unique = True
@@ -20,18 +33,23 @@ class User(Base):
 
   @validates("user_type")
   def validate_type(self, _, user_type: str) -> str:
-    if user_type.lower() not in ["client", "therapist", "admin"]:
-      raise ValueError(f"Not a valid user_type: {user_type}")
-    return user_type
+    return check_user_type(user_type)
 
   @validates("email")
   def validate_email(self, _, email: str) -> str:
-    if not re.match(
-      r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
-      email
-    ):
-      raise ValueError(f"Invalid email address: {email}")
-    return email
+    return check_email(email)
+
+  @validates("password")
+  def validate_password(self, _, password: str) -> str:
+    return check_password(password)
+
+  @validates("token")
+  def validate_token(self, _, token: str) -> str:
+    return check_token(token)
+
+  @validates("user_id")
+  def validate_user_id(self, _, user_id: str) -> str:
+    return check_user_id(user_id)
 
   def __repr__(self):
     return f"<User_id {self.user_id}, email: {self.email}>"

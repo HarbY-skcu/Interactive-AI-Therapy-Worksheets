@@ -1,17 +1,11 @@
-import asyncio
 from pathlib import Path
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from typing import Generator
 
-from backend.domain.Ports.repository import CheckLoginRepository
-from backend.infrastructure.repository.async_postgres_db import AsyncPostgresDatabase
 from backend.presentation.make_account_router import account_maker_router
 
 

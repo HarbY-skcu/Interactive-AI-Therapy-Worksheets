@@ -31,13 +31,12 @@ class BasicJWTEncrypter:
     token = jwt.encode(
       {
         "user_id": user_id,
-        "user_type": user_type,
+        "user_type": user_type.lower(),
         "exp": datetime.now(timezone.utc) + self.TOKEN_TTL,
       },
       self.SECRET_KEY,
       algorithm= self.HASHED_PWD_ALGORITHM,
     )
-
     return EncryptedData(
       user_id = user_id,
       hashed_password = hashed_password,
