@@ -1,3 +1,4 @@
 /src/backend/.env.keys
 .vs/
 .venv/
+/src/backend/temp_log_file.json

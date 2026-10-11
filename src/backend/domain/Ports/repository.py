@@ -4,6 +4,9 @@ from backend.models.domain_models.user_identity import UserInformation
 
 class CheckLoginRepository(Protocol):
 
+  @classmethod
+
+
   async def check_if_credentials_are_allowed(
     self,
     password: str,

@@ -1,33 +1,39 @@
-import asyncio
 from pathlib import Path
 
 import pytest
+import uuid
+
 from _pytest.monkeypatch import MonkeyPatch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from typing import Generator
 
-from backend.domain.Ports.repository import CheckLoginRepository
-from backend.infrastructure.repository.async_postgres_db import AsyncPostgresDatabase
+from backend.presentation.login_router import login_router
 from backend.presentation.make_account_router import account_maker_router
 
-
 @pytest.fixture(scope="session")
-def register_router(
+def login_router_fixture(
   monkeypatch: MonkeyPatch,
 ) -> TestClient:
   monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
   monkeypatch.setenv("SECRET_KEY", "test_secret_key")
   monkeypatch.setenv("PWD_ENCRYPTION_ALGORITHM", "HS256")
   test_app = FastAPI()
+  test_app.include_router(login_router)
   test_app.include_router(account_maker_router)
-  return TestClient(test_app)
+  app = TestClient(test_app)
+  app.post(
+    '/account/register',
+    headers={
+      "email": "info@youremail.com",
+      "password": "K#7v2bW9",
+      "user_type": "Therapist"
+    }
+  )
+  return app
 
 @pytest.fixture
-def register_router_without_db(
+def login_router_without_db(
   monkeypatch: MonkeyPatch,
   tmp_path: Path,
 ) -> Generator[TestClient]:
@@ -42,31 +48,16 @@ def register_router_without_db(
   monkeypatch.setenv("PWD_ENCRYPTION_ALGORITHM", "HS256")
 
   test_app = FastAPI()
-  test_app.include_router(account_maker_router)
-
+  test_app.include_router(login_router)
   with TestClient(test_app) as client:
     yield client
 
-
-invalid_passwords = [
-  "2Happy!",
-  "67676767",
-  "ReallyReallyReallyReallyReally"
-  "ReallyReallyReallyReallyReally"
-  "ReallyReallyReallyReally"
-  "LongPassword100!",
-  "#$%*@#@*&#@*)*%",
-  r"\F\o\n\a\r\t" + '\\',
-  "",
-  "xdx"
-  "1234%^&*"
+invalid_password_and_emails =   [
+  ("", ""),
+  ("", "K#7v2bW9"),
+  ("info@youremail.com", ""),
+  ("info@youremail.com", "wrongpassw0rd*"),
+  ("wrong@email.com", "K#7v2bW9"),
+  ("wrong@email.com", "wrongpassw0rd*")
 ]
 
-invalid_emails = [
-  "user@",
-  "@invalid.com",
-  ".me@example.com",
-  "me@example..com",
-  "me.example@com",
-  r"me\@example.com"
-]

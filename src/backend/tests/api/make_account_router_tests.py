@@ -1,6 +1,7 @@
 import pytest
 
 from fastapi.testclient import TestClient
+from typing import Generator
 
 from backend.tests.fixtures.make_account_router_fixtures import register_router, invalid_passwords, invalid_emails
 
@@ -20,6 +21,7 @@ def test_account_takes_valid_credentials(
   response_data = response.json()
 
   assert response.status_code == 201
+  assert response_data["detail"] == "User Created"
   assert isinstance(response_data["token"], str) and response_data["token"]
   assert isinstance(response_data["user_id"], str) and response_data["user_id"]
   assert response_data["user_type"] == "Therapist"
@@ -63,7 +65,7 @@ def test_signup_refuses_invalid_email(
   )
 
   assert response.status_code == 400
-  assert response.json()["detail"] == "Invalid Email Address, try again"
+  assert response.json()["detail"] == "Invalid Email Address, Try Again"
 
 @pytest.mark.parameter(
   "password",
@@ -97,5 +99,17 @@ def test_restriction_of_making_multiple_accounts_on_the_same_email(
   assert response.json()["detail"] == "Invalid Operation: Account Already Exists"
 
 def test_database_failure_during_request(
-  register_router_without_db: TestClient
-)
+  register_router_without_db: Generator[TestClient]
+):
+  router = next(register_router_without_db)
+  response = router.post(
+    '/account/register',
+    headers={
+      "email": "info@youremail.com",
+      "password": "K#7v2bW9",
+      "user_type": "Therapist"
+    }
+  )
+
+  assert response.status_code == 500
+  assert response.json()["detail"] == "Database Not Operational"
