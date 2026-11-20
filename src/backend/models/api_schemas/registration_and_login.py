@@ -44,9 +44,9 @@ class RegisterRequest(Base):
     extra = "forbid"
   )
 
-class RegisterRequestResponse(Base):
+class RegisterResponse(Base):
   token: str = Field(description = "Generated Token for valid user")
-  user_id: str = Field(description="User's unique ID")
+  user_id: str = Field(description= "User's unique ID")
   user_type: str = Field(description="Type of account they wish to create ")
 
 class LoginRequest(Base):

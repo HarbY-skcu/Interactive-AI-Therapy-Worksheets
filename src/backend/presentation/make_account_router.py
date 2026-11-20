@@ -13,7 +13,7 @@ from src.backend.domain.Ports.repository import CheckLoginRepository
 from backend.infrastructure.encrypters.basic_encrypter import BasicJWTEncrypter
 from backend.infrastructure.repository.async_postgres_db import AsyncPostgresDatabase
 from backend.domain.service.authorization_service import TOKEN_TTL
-from src.backend.models.api_schemas.registration_and_login import RegisterRequest, RegisterRequestResponse
+from src.backend.models.api_schemas.registration_and_login import RegisterRequest, RegisterResponse
 
 @asynccontextmanager
 async def item_lifespan(
@@ -51,14 +51,14 @@ def get_encrypter() -> Encrypter:
 
 @account_maker_router.post(
   "/account/register",
-  response_model=RegisterRequestResponse,
+  response_model=RegisterResponse,
   status_code=status.HTTP_201_CREATED,
 )
 async def create_account(
   proposed_user: Annotated[RegisterRequest, Body()],
   user_database: Annotated[CheckLoginRepository, Depends(get_database)],
   jwt_encrypter: Annotated[Encrypter, Depends(get_encrypter)],
-) -> RegisterRequestResponse:
+) -> RegisterResponse:
   allowed_flag = await asyncio.create_task(
     user_database.check_if_credentials_are_allowed(
       email = proposed_user.email,
@@ -82,7 +82,7 @@ async def create_account(
     )
   )
 
-  return RegisterRequestResponse(
+  return RegisterResponse(
     token = encrypted_data.token,
     user_id = encrypted_data.user_id,
     user_type = proposed_user.user_type
