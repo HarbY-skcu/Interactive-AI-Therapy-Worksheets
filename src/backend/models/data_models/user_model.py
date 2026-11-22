@@ -1,6 +1,6 @@
-from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy import ForeignKey, CheckConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column, validates
-from base_model import Base
+from .base_model import Base
 import re
 from backend.domain.service.check_input_service import (
   check_password,
@@ -16,18 +16,17 @@ class User(Base):
     CheckConstraint(
       "user_type IN ('client', 'therapist', 'admin')",
       name = "ck_user_information_user_type"
-    )
+    ),
   )
 
-  password: Mapped[str] = mapped_column()
+  password: Mapped[str] = mapped_column(String(255))
   email: Mapped[str] = mapped_column(
-    primary_key = True,
     unique = True
   )
   user_type: Mapped[str] = mapped_column()
   token: Mapped[str] = mapped_column(unique = True)
   user_id: Mapped[str] = mapped_column(
-    ForeignKey("user_data.id"),
+    primary_key=True,
     unique = True
   )
 
