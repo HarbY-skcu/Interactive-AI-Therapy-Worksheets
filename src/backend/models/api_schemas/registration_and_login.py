@@ -6,7 +6,9 @@ from pydantic import Field, ConfigDict, SecretStr, model_validator, ValidationEr
 from backend.domain.service.check_input_service import (
   check_password,
   check_email,
-  check_user_type
+  check_user_type,
+  check_token,
+  check_user_id,
 )
 
 class RegisterRequest(Base):
@@ -45,9 +47,8 @@ class RegisterRequest(Base):
   )
 
 class RegisterResponse(Base):
-  token: str = Field(description = "Generated Token for valid user")
   user_id: str = Field(description= "User's unique ID")
-  user_type: str = Field(description="Type of account they wish to create ")
+  user_type: str = Field(description="Type of account they wish to create")
 
 class LoginRequest(Base):
   email: str = Field(
@@ -76,3 +77,25 @@ class LoginRequest(Base):
     strict=True,
     extra = "forbid"
   )
+
+class LoginResponse(Base):
+  user_id: str = Field(
+    description="User's unique ID"
+  )
+  token: str = Field(
+    description="Token of logged in user"
+  )
+
+  @model_validator(mode = "after")
+  def verify_valid_token(
+    self,
+  ) -> LoginResponse:
+    check_token(self.token)
+    return self
+
+  @model_validator(mode = "after")
+  def verify_valid_user_id(
+    self
+  ) -> LoginResponse:
+    check_user_id(self.user_id)
+    return self

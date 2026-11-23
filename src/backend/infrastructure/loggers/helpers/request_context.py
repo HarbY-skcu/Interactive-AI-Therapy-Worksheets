@@ -10,16 +10,15 @@ request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 
 def resolve_request_id(incoming: str | None) -> str:
-    if incoming and _VALID_REQUEST_ID.fullmatch(incoming):
-        return incoming
-    return str(uuid.uuid4())
-
+  if incoming and _VALID_REQUEST_ID.fullmatch(incoming):
+    return incoming
+  return str(uuid.uuid4())
 
 class RequestIdFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        record.request_id = request_id_var.get() or "-"
-        return True
+  def filter(self, record: logging.LogRecord) -> bool:
+    record.request_id = request_id_var.get() or "-"
+    return True
 
 class InfoFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        return record.levelno == logging.INFO
+  def filter(self, record: logging.LogRecord) -> bool:
+    return record.levelno == logging.INFO

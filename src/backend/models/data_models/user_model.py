@@ -1,7 +1,8 @@
 from sqlalchemy import ForeignKey, CheckConstraint, String
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.orm import Mapped, mapped_column, validates, relationship
+from typing import List
+
 from .base_model import Base
-import re
 from backend.domain.service.check_input_service import (
   check_password,
   check_email,
@@ -19,15 +20,21 @@ class User(Base):
     ),
   )
 
-  password: Mapped[str] = mapped_column(String(255))
-  email: Mapped[str] = mapped_column(
-    unique = True
+  password: Mapped[str] = mapped_column(
+    String(255),
+    nullable=False,
   )
-  user_type: Mapped[str] = mapped_column()
-  token: Mapped[str] = mapped_column(unique = True)
+  email: Mapped[str] = mapped_column(
+    unique = True,
+    nullable = False,
+  )
+  user_type: Mapped[str] = mapped_column(
+    nullable = False,
+  )
   user_id: Mapped[str] = mapped_column(
     primary_key=True,
-    unique = True
+    unique = True,
+    nullable = False,
   )
 
   @validates("user_type")
@@ -37,14 +44,6 @@ class User(Base):
   @validates("email")
   def validate_email(self, _, email: str) -> str:
     return check_email(email)
-
-  @validates("password")
-  def validate_password(self, _, password: str) -> str:
-    return check_password(password)
-
-  @validates("token")
-  def validate_token(self, _, token: str) -> str:
-    return check_token(token)
 
   @validates("user_id")
   def validate_user_id(self, _, user_id: str) -> str:

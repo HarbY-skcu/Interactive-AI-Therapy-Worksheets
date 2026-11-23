@@ -20,20 +20,20 @@ _email_re = re.compile(EMAIL_PATTERN)
 _password_re = re.compile(PASSWORD_PATTERN)
 
 def check_email(value: str) -> str:
-    if _email_re.fullmatch(value) is None:
-        raise ValueError("Invalid email address")
-    return value
+  if _email_re.fullmatch(value) is None:
+      raise ValueError("Invalid email address")
+  return value
 
 def check_password(value: str) -> str:
-    if _password_re.fullmatch(value) is None:
-        raise ValueError("Invalid password")
-    return value
+  if _password_re.fullmatch(value) is None:
+      raise ValueError("Invalid password")
+  return value
 
 def check_user_type(value: str) -> str:
-    value = value.lower()
-    if value not in USER_TYPES:
-        raise ValueError(f"Not a valid user_type: {value}")
-    return value
+  value = value.lower()
+  if value not in USER_TYPES:
+      raise ValueError(f"Not a valid user_type: {value}")
+  return value
 
 def check_user_id(value: str) -> str:
   try:
@@ -64,4 +64,4 @@ def check_token(token: str) -> str:
   if set(claims) - set(REQUIRED_CLAIMS):
     raise ValueError("Invalid token")
 
-  return token
+  return claims["user_id"]

@@ -6,7 +6,7 @@ import uuid
 import jwt
 
 from backend.domain.Ports.encrypter import Encrypter
-from backend.models.domain_models.encryption import EncryptedData
+from backend.models.domain_models.encryption import EncryptedPassword
 
 
 class BasicJWTEncrypter:
@@ -20,25 +20,28 @@ class BasicJWTEncrypter:
     self.HASHED_PWD_ALGORITHM = hashed_pwd_algorithm
     self.TOKEN_TTL = token_ttl
 
-  def encrypt(
+  def encrypt_password(
     self,
     pwd: str,
-    user_type: str,
-  ) -> EncryptedData:
-
+  ) -> EncryptedPassword:
     hashed_password = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt())
     user_id = str(uuid.uuid4())
-    token = jwt.encode(
+    return EncryptedPassword(
+      user_id = user_id,
+      hashed_password = hashed_password,
+    )
+
+  def make_encrypted_token(
+    self,
+    user_id: str,
+    user_type: str,
+  ) -> str:
+    return jwt.encode(
       {
         "user_id": user_id,
         "user_type": user_type.lower(),
         "exp": datetime.now(timezone.utc) + self.TOKEN_TTL,
       },
       self.SECRET_KEY,
-      algorithm= self.HASHED_PWD_ALGORITHM,
-    )
-    return EncryptedData(
-      user_id = user_id,
-      hashed_password = hashed_password,
-      token = token,
+      algorithm=self.HASHED_PWD_ALGORITHM,
     )

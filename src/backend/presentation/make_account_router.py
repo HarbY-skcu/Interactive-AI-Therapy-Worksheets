@@ -67,23 +67,20 @@ async def create_account(
   if not allowed_flag:
     raise HTTPException(status_code=400, detail="Account is already registered")
 
-  encrypted_data = jwt_encrypter.encrypt(
-    proposed_user.password.get_secret_value(),
-    proposed_user.user_type
+  encrypted_data = jwt_encrypter.encrypt_password(
+    proposed_user.password.get_secret_value()
   )
 
   await asyncio.create_task(
     user_database.create_new_user(
       email = proposed_user.email,
-      password = encrypted_data.hashed_password.decode(),
-      token = encrypted_data.token,
+      password = encrypted_data.hashed_password,
       user_type = proposed_user.user_type,
       user_id = encrypted_data.user_id
     )
   )
 
   return RegisterResponse(
-    token = encrypted_data.token,
     user_id = encrypted_data.user_id,
     user_type = proposed_user.user_type
   )

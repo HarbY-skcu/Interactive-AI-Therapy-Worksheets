@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.domain.Ports.repository import CheckLoginRepository
 from backend.models.domain_models.user_identity import UserInformation
 from backend.models.data_models.base_model import Base
-from backend.models.data_models.user_model import User
+from backend.models.data_models.user_model import User, UserTokens
 from sqlalchemy.ext.asyncio import (
   create_async_engine,
   AsyncEngine,
@@ -64,20 +64,17 @@ class AsyncPostgresDatabase:
     password: str,
     email: str,
     user_type: str,
-    token: str,
     user_id: str
   ) -> None:
     check_email(email)
     check_user_type(user_type)
     check_password(password)
     check_user_id(user_id)
-    check_token(token)
     async with self.session_maker() as session:
       stmt = insert(User).values(
         email = email,
         password = password,
         user_type = user_type,
-        token = token,
         user_id = user_id
       )
       await session.execute(stmt)

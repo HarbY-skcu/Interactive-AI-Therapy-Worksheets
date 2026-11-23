@@ -25,7 +25,6 @@ class CheckLoginRepository(Protocol):
     password: str,
     email: str,
     user_type: str,
-    token: str,
     user_id: str
   ) -> None:
     pass
