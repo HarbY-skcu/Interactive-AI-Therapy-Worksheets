@@ -1,41 +1,21 @@
 import os
-from typing import Annotated, Dict, AsyncGenerator
+from typing import Annotated
 import dotenvx
 import asyncio
-from contextlib import asynccontextmanager
 
 
-from fastapi import APIRouter, Body, HTTPException, Depends, status, Request
+from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from backend.domain.Ports.encrypter import Encrypter
-from src.backend.domain.Ports.repository import CheckLoginRepository
+from backend.domain.Ports.repository import CheckLoginRepository
 
 from backend.infrastructure.encrypters.basic_encrypter import BasicJWTEncrypter
-from backend.infrastructure.repository.async_postgres_db import AsyncPostgresDatabase
 from backend.domain.service.authorization_service import TOKEN_TTL
-from src.backend.models.api_schemas.registration_and_login import RegisterRequest, RegisterResponse
-
-@asynccontextmanager
-async def item_lifespan(
-  router: APIRouter,
-) -> AsyncGenerator[Dict[str, AsyncPostgresDatabase], None]:
-  db_url = os.getenv("DATABASE_URL")
-  if not db_url:
-    raise ValueError("DATABASE_URL environment variable not set")
-  new_db = await asyncio.create_task(AsyncPostgresDatabase.create(
-      db_url=db_url,
-    )
-  )
-  try:
-    yield {"db": new_db}
-  finally:
-    await new_db.close()
+from backend.models.api_schemas.registration_and_login import RegisterRequest, RegisterResponse
+from backend.presentation.database_lifespan import get_database, item_lifespan
 
 account_maker_router = APIRouter(lifespan = item_lifespan)
 dotenvx.load_dotenv("src/backend/config.env")
-
-async def get_database(request: Request) -> CheckLoginRepository:
-  return request.state.db
 
 def get_encrypter() -> Encrypter:
   secret_key = os.getenv("SECRET_KEY")
@@ -74,7 +54,7 @@ async def create_account(
   await asyncio.create_task(
     user_database.create_new_user(
       email = proposed_user.email,
-      password = encrypted_data.hashed_password,
+      password = encrypted_data.hashed_password.decode("utf-8"),
       user_type = proposed_user.user_type,
       user_id = encrypted_data.user_id
     )

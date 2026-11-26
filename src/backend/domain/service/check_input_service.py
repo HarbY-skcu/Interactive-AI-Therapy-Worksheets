@@ -9,8 +9,9 @@ import dotenvx
 
 dotenvx.load_dotenv("src/backend/config.env")
 
-EMAIL_PATTERN = r'''[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}'''
-PASSWORD_PATTERN = r'''(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}'''
+EMAIL_PATTERN = r'''[a-zA-Z0-9_+-]+(?:\.[a-zA-Z0-9_+-]+)*@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}'''
+# Password max is 72: bcrypt rejects longer input, and the allowed charset is ASCII (1 char = 1 byte)
+PASSWORD_PATTERN = r'''(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,72}'''
 USER_TYPES = ("client", "therapist", "admin")
 REQUIRED_CLAIMS = ["user_id", "user_type", "exp"]
 

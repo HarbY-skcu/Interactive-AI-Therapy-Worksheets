@@ -32,5 +32,5 @@ class CheckLoginRepository(Protocol):
   async def fetch_user(
     self,
     email: str,
-  ) -> UserInformation:
+  ) -> UserInformation | None:
     pass

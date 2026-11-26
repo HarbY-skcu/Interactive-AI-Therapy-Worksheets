@@ -38,7 +38,7 @@ class RegisterRequest(Base):
   def verify_valid_user_type(
     self,
   ) -> RegisterRequest:
-    check_user_type(self.user_type.lower())
+    self.user_type = check_user_type(self.user_type)
     return self
 
   model_config = ConfigDict(

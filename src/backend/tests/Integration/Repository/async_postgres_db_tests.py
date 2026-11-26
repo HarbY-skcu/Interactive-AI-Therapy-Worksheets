@@ -4,7 +4,6 @@ from sqlalchemy.exc import OperationalError
 
 from backend.domain.Ports.repository import CheckLoginRepository
 
-
 class TestAsyncPostgresDb:
 
   @pytest.mark.asyncio

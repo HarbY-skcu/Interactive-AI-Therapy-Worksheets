@@ -4,8 +4,9 @@ import time
 
 from fastapi import FastAPI, Request
 
-from src.backend.infrastructure.loggers.json_logger import setup_logging
-from src.backend.infrastructure.loggers.helpers.request_context \
+from backend.presentation.validation_handlers import register_validation_handlers
+from backend.infrastructure.loggers.json_logger import setup_logging
+from backend.infrastructure.loggers.helpers.request_context \
     import REQUEST_ID_HEADER, request_id_var, resolve_request_id
 
 log_dir = pathlib.Path(__file__).resolve().parents[3] / "logs"
@@ -14,6 +15,7 @@ setup_logging()
 
 
 app = FastAPI()
+register_validation_handlers(app)
 
 @app.middleware("http")
 async def request_context(request: Request, call_next):

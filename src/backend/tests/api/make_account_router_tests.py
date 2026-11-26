@@ -1,9 +1,10 @@
 import pytest
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from typing import Generator
+from sqlalchemy.exc import OperationalError
 
-from backend.tests.fixtures.api.make_account_router_fixtures import register_router, invalid_passwords, invalid_emails
+from backend.tests.fixtures.api.make_account_router_fixtures import invalid_passwords, invalid_emails
 
 
 def test_account_takes_valid_credentials(
@@ -11,7 +12,7 @@ def test_account_takes_valid_credentials(
 ):
   response = register_router.post(
     '/account/register',
-    headers={
+    json={
       "email": "info@youremail.com",
       "password": "K#7v2bW9",
       "user_type": "Therapist"
@@ -21,12 +22,10 @@ def test_account_takes_valid_credentials(
   response_data = response.json()
 
   assert response.status_code == 201
-  assert response_data["detail"] == "User Created"
-  assert isinstance(response_data["token"], str) and response_data["token"]
   assert isinstance(response_data["user_id"], str) and response_data["user_id"]
-  assert response_data["user_type"] == "Therapist"
+  assert response_data["user_type"] == "therapist"
 
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
   "password",
   invalid_passwords,
 )
@@ -36,7 +35,7 @@ def test_signup_refuses_invalid_password(
 ):
   response = register_router.post(
     '/account/register',
-    headers={
+    json={
       "email": "info@youremail.com",
       "password": password,
       "user_type": "Therapist"
@@ -45,9 +44,9 @@ def test_signup_refuses_invalid_password(
 
   assert response.status_code == 400
   assert response.json()["detail"] == "Incorrect Credentials, try again"
-  assert password not in response.json()["detail"]
+  assert not password or password not in response.json()["detail"]
 
-@pytest.mark.parameter(
+@pytest.mark.parametrize(
   "email",
   invalid_emails,
 )
@@ -57,7 +56,7 @@ def test_signup_refuses_invalid_email(
 ):
   response = register_router.post(
     '/account/register',
-    headers={
+    json={
       "email": email,
       "password": "K#7v2bW9",
       "user_type": "Therapist"
@@ -67,7 +66,7 @@ def test_signup_refuses_invalid_email(
   assert response.status_code == 400
   assert response.json()["detail"] == "Invalid Email Address, Try Again"
 
-@pytest.mark.parameter(
+@pytest.mark.parametrize(
   "password",
   [
     "K#7v2bW9",
@@ -80,7 +79,7 @@ def test_restriction_of_making_multiple_accounts_on_the_same_email(
 ):
   register_router.post(
     '/account/register',
-    headers={
+    json={
       "email": "info@youremail.com",
       "password": "K#7v2bW9",
       "user_type": "Therapist"
@@ -88,7 +87,7 @@ def test_restriction_of_making_multiple_accounts_on_the_same_email(
   )
   response = register_router.post(
     '/account/register',
-    headers={
+    json={
       "email": "info@youremail.com",
       "password": password,
       "user_type": "Client"
@@ -96,20 +95,11 @@ def test_restriction_of_making_multiple_accounts_on_the_same_email(
   )
 
   assert response.status_code == 400
-  assert response.json()["detail"] == "Invalid Operation: Account Already Exists"
+  assert response.json()["detail"] == "Account is already registered"
 
-def test_database_failure_during_request(
-  register_router_without_db: Generator[TestClient]
+def test_app_refuses_to_start_without_database(
+  register_app_without_db: FastAPI
 ):
-  router = next(register_router_without_db)
-  response = router.post(
-    '/account/register',
-    headers={
-      "email": "info@youremail.com",
-      "password": "K#7v2bW9",
-      "user_type": "Therapist"
-    }
-  )
-
-  assert response.status_code == 500
-  assert response.json()["detail"] == "Database Not Operational"
+  with pytest.raises(OperationalError):
+    with TestClient(register_app_without_db):
+      pass

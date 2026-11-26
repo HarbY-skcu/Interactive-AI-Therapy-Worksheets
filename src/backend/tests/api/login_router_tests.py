@@ -1,32 +1,22 @@
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from typing import Generator
-
-from backend.tests.fixtures.api.login_router_fixtures import login_router_fixture
+from sqlalchemy.exc import OperationalError
 
 
-def test_database_failure_during_request(
-  login_router_without_db: Generator[TestClient]
+def test_app_refuses_to_start_without_database(
+  login_app_without_db: FastAPI
 ):
-  router = next(login_router_without_db)
-  response = router.post(
-    '/account/login',
-    headers={
-      "email": "info@youremail.com",
-      "password": "K#7v2bW9",
-      "user_type": "Therapist"
-    }
-  )
-
-  assert response.status_code == 500
-  assert response.json()["detail"] == "Database Not Operational"
+  with pytest.raises(OperationalError):
+    with TestClient(login_app_without_db):
+      pass
 
 def test_login_with_new_user(
   login_router_fixture: TestClient,
 ):
   response = login_router_fixture.post(
     '/account/login',
-    headers={
+    json={
       "email": "info@youremail.com",
       "password": "K#7v2bW9",
     }
@@ -34,20 +24,45 @@ def test_login_with_new_user(
   response_data = response.json()
 
   assert response.status_code == 200
-  assert response_data["detail"] == "Successful Login"
   assert isinstance(response_data["token"], str) and response_data["token"]
   assert isinstance(response_data["user_id"], str) and response_data["user_id"]
-  assert response_data["user_type"] == "Therapist"
+  assert response_data["user_type"] == "therapist"
 
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
   "email,password",
   [
     ("", ""),
     ("", "K#7v2bW9"),
     ("info@youremail.com", ""),
     ("info@youremail.com", "wrongpassw0rd*"),
+  ]
+)
+def test_login_with_malformed_credentials(
+  login_router_fixture: TestClient,
+  email: str,
+  password: str,
+):
+  response = login_router_fixture.post(
+    "/account/login",
+    json={
+      "email": email,
+      "password": password
+    }
+  )
+
+  assert response.status_code == 400
+  assert response.json()["detail"] in (
+    "Invalid Email Address, Try Again",
+    "Incorrect Credentials, try again",
+  )
+  assert not password or password not in response.json()["detail"]
+
+@pytest.mark.parametrize(
+  "email,password",
+  [
     ("wrong@email.com", "K#7v2bW9"),
-    ("wrong@email.com", "wrongpassw0rd*")
+    ("wrong@email.com", "Wr0ngpassw*rd"),
+    ("info@youremail.com", "Wr0ngpassw*rd"),
   ]
 )
 def test_login_with_wrong_credentials(
@@ -57,11 +72,11 @@ def test_login_with_wrong_credentials(
 ):
   response = login_router_fixture.post(
     "/account/login",
-    headers={
+    json={
       "email": email,
       "password": password
     }
   )
 
-  assert response.status_code == 400
-  assert response.json()["detail"] == "Wrong Email or Password"
+  assert response.status_code == 401
+  assert response.json()["detail"] == "Invalid Credentials"

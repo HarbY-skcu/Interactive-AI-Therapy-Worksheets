@@ -11,15 +11,13 @@ from backend.domain.Ports.repository import CheckLoginRepository
 from backend.domain.service.authorization_service import TOKEN_TTL
 from backend.infrastructure.encrypters.basic_encrypter import BasicJWTEncrypter
 from backend.models.api_schemas.registration_and_login import LoginRequest
+from backend.presentation.database_lifespan import get_database, item_lifespan
 
-login_router = APIRouter()
+login_router = APIRouter(lifespan = item_lifespan)
 
 load_dotenvx("config.env")
 SECRET_KEY = os.getenv('SECRET_KEY')
 PWD_ENCRYPTION_ALGORITHM = os.getenv('PWD_ENCRYPTION_ALGORITHM')
-
-def make_database() -> CheckLoginRepository:
-  pass
 
 def get_encrypter() -> Encrypter:
   secret_key = os.getenv("SECRET_KEY")
@@ -36,7 +34,7 @@ def get_encrypter() -> Encrypter:
 @login_router.post("/account/login")
 async def login_user(
   invalidated_user: Annotated[LoginRequest, Body()],
-  user_database: Annotated[CheckLoginRepository, Depends(make_database)],
+  user_database: Annotated[CheckLoginRepository, Depends(get_database)],
   jwt_encrypter: Annotated[Encrypter, Depends(get_encrypter)]
 ):
   found_user = await user_database.fetch_user(invalidated_user.email)

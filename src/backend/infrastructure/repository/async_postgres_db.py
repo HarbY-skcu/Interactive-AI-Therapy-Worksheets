@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.domain.Ports.repository import CheckLoginRepository
 from backend.models.domain_models.user_identity import UserInformation
 from backend.models.data_models.base_model import Base
-from backend.models.data_models.user_model import User, UserTokens
+from backend.models.data_models.user_model import User
 from sqlalchemy.ext.asyncio import (
   create_async_engine,
   AsyncEngine,
@@ -57,7 +57,7 @@ class AsyncPostgresDatabase:
     async with self.session_maker() as session:
       stmt = select(User.email).where(User.email == email)
       email = await session.scalar(stmt)
-    return bool(email)
+    return email is None
 
   async def create_new_user(
     self,
@@ -67,8 +67,7 @@ class AsyncPostgresDatabase:
     user_id: str
   ) -> None:
     check_email(email)
-    check_user_type(user_type)
-    check_password(password)
+    user_type = check_user_type(user_type)
     check_user_id(user_id)
     async with self.session_maker() as session:
       stmt = insert(User).values(
@@ -83,15 +82,15 @@ class AsyncPostgresDatabase:
   async def fetch_user(
     self,
     email: str
-  ) -> UserInformation:
+  ) -> UserInformation | None:
     async with self.session_maker() as session:
       stmt = select(User).where(User.email == email)
-      result = await session.execute(stmt)
-    user = result.first()
+      user = await session.scalar(stmt)
+    if user is None:
+      return None
     return UserInformation(
-      password = user["password"],
-      email = user["email"],
-      user_type = user["user_type"],
-      token = user["token"],
-      user_id = user["user_id"]
+      password = user.password,
+      email = user.email,
+      user_type = user.user_type,
+      user_id = user.user_id,
     )

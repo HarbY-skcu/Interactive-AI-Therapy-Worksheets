@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Annotated
 from backend.domain.Ports.user_authorization import GetCurrentUser, RequireRole
 
@@ -8,7 +9,7 @@ from dotenvx import load_dotenvx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-load_dotenvx("config.env")
+load_dotenvx(str(Path(__file__).resolve().parents[2] / "config.env"))
 SECRET_KEY = os.environ["SECRET_KEY"]          # fails loudly if missing
 ALGORITHM = os.environ["PWD_ENCRYPTION_ALGORITHM"]
 TOKEN_TTL = timedelta(hours=1)

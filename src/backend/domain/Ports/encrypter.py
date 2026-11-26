@@ -1,11 +1,11 @@
 from typing import Protocol, Tuple
-from src.backend.models.domain_models.encryption import EncryptedData
+from backend.models.domain_models.encryption import EncryptedPassword
 
 class Encrypter(Protocol):
   def encrypt_password(
     self,
     pwd: str,
-  ) -> EncryptedData:
+  ) -> EncryptedPassword:
     pass
 
   def make_encrypted_token(
